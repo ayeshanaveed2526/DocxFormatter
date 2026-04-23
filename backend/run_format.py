@@ -18,11 +18,6 @@ def main():
         print(f"Error: File '{input_file}' not found.")
         sys.exit(1)
         
-    if not os.getenv("GEMINI_API_KEY") or os.getenv("GEMINI_API_KEY").startswith("your_"):
-        print("\n[WARNING] You haven't set a real GEMINI_API_KEY in the .env file!")
-        print("The script needs this key to intelligently parse your document and instructions.")
-        print("Please update backend/.env before running.\n")
-        
     output_file = "formatted_" + os.path.basename(input_file)
     
     print("\n=========================================")

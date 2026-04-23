@@ -85,7 +85,7 @@ function App() {
       setIsSuccess(true);
     } catch (err) {
       console.error(err);
-      setError('An error occurred during processing. Ensure the backend is running and you have set GEMINI_API_KEY in the backend .env file.');
+      setError('An error occurred during processing. Ensure the backend server is running on port 5000.');
     } finally {
       setIsProcessing(false);
     }
