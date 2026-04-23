@@ -22,6 +22,8 @@ def format_document():
         return jsonify({'error': 'No file part'}), 400
     
     file = request.files['file']
+    instructions = request.form.get('instructions', '')
+    
     if file.filename == '':
         return jsonify({'error': 'No selected file'}), 400
         
@@ -34,8 +36,8 @@ def format_document():
         output_path = os.path.join(app.config['OUTPUT_FOLDER'], output_filename)
         
         try:
-            # Pass the document to the processing layer (python-docx + OpenAI)
-            process_document(input_path, output_path)
+            # Pass the document and instructions to the processing layer
+            process_document(input_path, output_path, instructions)
             
             # Return the formatted .docx file
             return send_file(

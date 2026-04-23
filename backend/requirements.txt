@@ -1,6 +1,6 @@
 flask
 flask-cors
 python-docx
-openai
+google-generativeai
 python-dotenv
 werkzeug

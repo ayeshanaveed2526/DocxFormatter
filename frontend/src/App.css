@@ -74,7 +74,7 @@
 
 .upload-area:hover, .upload-area.drag-active {
   border-color: var(--primary);
-  background: rgba(99, 102, 241, 0.05);
+  background: rgba(16, 185, 129, 0.05);
   transform: scale(1.02);
 }
 
@@ -111,7 +111,7 @@
   border: 1px solid var(--border-color);
   padding: 1rem 1.5rem;
   border-radius: 12px;
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
   animation: fadeIn 0.4s ease;
 }
 
@@ -152,6 +152,40 @@
   color: #ef4444;
 }
 
+/* Chatbot Input Styles */
+.instruction-input {
+  margin-bottom: 2rem;
+  text-align: left;
+  animation: fadeIn 0.4s ease;
+}
+
+.instruction-input label {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  margin-bottom: 0.5rem;
+}
+
+.instruction-input textarea {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 1rem;
+  color: var(--text-main);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.95rem;
+  resize: vertical;
+  transition: all 0.3s ease;
+}
+
+.instruction-input textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+  background: rgba(16, 185, 129, 0.05);
+}
+
 .action-btn {
   width: 100%;
   padding: 1rem;
@@ -168,12 +202,12 @@
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  box-shadow: 0 10px 20px -10px rgba(99, 102, 241, 0.5);
+  box-shadow: 0 10px 20px -10px rgba(16, 185, 129, 0.5);
 }
 
 .action-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 15px 25px -10px rgba(99, 102, 241, 0.6);
+  box-shadow: 0 15px 25px -10px rgba(16, 185, 129, 0.6);
 }
 
 .action-btn:disabled {

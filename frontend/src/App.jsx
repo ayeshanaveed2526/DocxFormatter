@@ -7,6 +7,7 @@ import './App.css';
 
 function App() {
   const [file, setFile] = useState(null);
+  const [instructions, setInstructions] = useState('');
   const [isDragging, setIsDragging] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
@@ -54,6 +55,7 @@ function App() {
 
   const removeFile = () => {
     setFile(null);
+    setInstructions('');
     resetState();
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
@@ -68,6 +70,7 @@ function App() {
     
     const formData = new FormData();
     formData.append('file', file);
+    formData.append('instructions', instructions);
 
     try {
       const response = await axios.post('http://127.0.0.1:5000/api/format', formData, {
@@ -82,7 +85,7 @@ function App() {
       setIsSuccess(true);
     } catch (err) {
       console.error(err);
-      setError('An error occurred during processing. Ensure the backend is running and you have set OPENAI_API_KEY.');
+      setError('An error occurred during processing. Ensure the backend is running and you have set GEMINI_API_KEY in the backend .env file.');
     } finally {
       setIsProcessing(false);
     }
@@ -139,6 +142,17 @@ function App() {
               </button>
             </div>
             
+            <div className="instruction-input">
+              <label htmlFor="rules">Chatbot formatting rules (Optional)</label>
+              <textarea 
+                id="rules" 
+                placeholder="e.g. set font size to 14 and heading 16, make subheadings bold..."
+                value={instructions}
+                onChange={(e) => setInstructions(e.target.value)}
+                rows={3}
+              ></textarea>
+            </div>
+
             <button className="action-btn" onClick={formatDocument}>
               Format Document
             </button>
@@ -148,9 +162,9 @@ function App() {
         {isProcessing && (
           <div className="processing-state">
             <Loader2 size={48} className="spinner" />
-            <p className="processing-text">AI is formatting your document...</p>
+            <p className="processing-text">AI is analyzing and formatting...</p>
             <p className="subtitle" style={{fontSize: '0.85rem', textAlign: 'center'}}>
-              This might take a minute depending on the length of the document.
+              Parsing layout and applying your rules.
             </p>
           </div>
         )}
