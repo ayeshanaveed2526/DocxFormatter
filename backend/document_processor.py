@@ -18,15 +18,20 @@ def extract_formatting_rules(instructions):
     if not instructions.strip():
         return rules
         
-    # Extract Paragraph font size (e.g., "font size 14" or "font size to 14")
-    para_match = re.search(r'font size.*?(\d+)', instructions)
+    # Extract Paragraph / Text font size (keywords: "text", "paragraph", "font size")
+    para_match = re.search(r'(?:text|paragraph|font)\s*(?:size)?\s*(?:to\s*)?(?:be\s*)?(\d+)', instructions)
     if para_match:
         rules["paragraph"]["size"] = int(para_match.group(1))
         
-    # Extract Heading font size (e.g., "heading 16")
-    head_match = re.search(r'heading.*?(\d+)', instructions)
+    # Extract Heading font size (keywords: "heading", "headings")
+    head_match = re.search(r'(?<!sub)heading[s]?\s*(?:size)?\s*(?:to\s*)?(?:be\s*)?(\d+)', instructions)
     if head_match:
         rules["heading"]["size"] = int(head_match.group(1))
+        
+    # Extract Subheading font size (keywords: "subheading", "subheadings")
+    subhead_match = re.search(r'subheading[s]?\s*(?:size)?\s*(?:to\s*)?(?:be\s*)?(\d+)', instructions)
+    if subhead_match:
+        rules["subheading"]["size"] = int(subhead_match.group(1))
         
     # Extract Subheading bold (e.g., "make subheadings bold")
     if 'subheading' in instructions and 'bold' in instructions:
@@ -39,7 +44,7 @@ def classify_paragraph(para):
     A simple offline heuristic to guess if a text is a heading, subheading, or paragraph.
     """
     text = para.text.strip()
-    style_name = para.style.name.lower()
+    style_name = para.style.name.lower() if para.style and para.style.name else ""
     
     if not text:
         return None
@@ -50,12 +55,23 @@ def classify_paragraph(para):
     if 'heading' in style_name:
         return 'subheading'
         
+    # Detect numerical subheading figures like 1.1, 2.2, 3.4.1
+    if re.match(r'^\d+\.\d+(\.\d+)?\b', text):
+        return 'subheading'
+        
     # Fallback to visual heuristics:
-    # If it's short, doesn't end with a period, it's likely a subheading
-    if len(text) < 60 and not text.endswith('.'):
-        # If it's very short and title-cased, maybe it's a main heading
-        if len(text) < 30 and text.istitle():
+    # Check word count and ending punctuation
+    words = text.split()
+    if len(words) <= 12 and not text.endswith('.') and not text.endswith(','):
+        # ALL CAPS is a strong indicator of a main heading
+        if text.isupper():
             return 'heading'
+            
+        # Very short phrases (1-5 words) are usually main headings regardless of case
+        if len(words) <= 5:
+            return 'heading'
+            
+        # Otherwise, if it's slightly longer (6-12 words) without a period, it's a subheading
         return 'subheading'
         
     return 'paragraph'
