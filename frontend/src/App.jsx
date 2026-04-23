@@ -1,203 +1,409 @@
 import React, { useState, useRef } from 'react';
 import axios from 'axios';
-import { 
-  FileText, UploadCloud, X, Loader2, CheckCircle, Download, FilePenLine
+import {
+  FileText, UploadCloud, X, Loader2, CheckCircle,
+  Download, FilePenLine, Type, AlignLeft, Layout,
+  BookOpen, Hash, ChevronRight
 } from 'lucide-react';
 import './App.css';
 
-function App() {
-  const [file, setFile] = useState(null);
-  const [instructions, setInstructions] = useState('');
-  const [isDragging, setIsDragging] = useState(false);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false);
-  const [downloadUrl, setDownloadUrl] = useState('');
-  const [error, setError] = useState('');
-  const fileInputRef = useRef(null);
+const DEFAULT_RULES = {
+  heading:     { size: 16, bold: true },
+  subheading:  { size: 14, bold: true },
+  paragraph:   { size: 12, bold: false },
+  mcq:         { size: 12, bold: false },
+  option:      { size: 11, bold: false },
+  margins:     { top: 2.54, bottom: 2.54, left: 2.54, right: 2.54 },
+  orientation: 'portrait',
+  headerText:  '',
+  footerText:  '',
+  pageNumbers: 'none',
+};
 
-  const handleDragOver = (e) => {
-    e.preventDefault();
-    setIsDragging(true);
-  };
+const STEPS = ['upload', 'typography', 'layout', 'header-footer', 'review'];
+const STEP_LABELS = ['Upload', 'Typography', 'Layout', 'Header & Footer', 'Review'];
+const STEP_ICONS  = [UploadCloud, Type, Layout, BookOpen, CheckCircle];
 
-  const handleDragLeave = () => {
-    setIsDragging(false);
-  };
-
-  const handleDrop = (e) => {
-    e.preventDefault();
-    setIsDragging(false);
-    
-    const droppedFile = e.dataTransfer.files[0];
-    if (droppedFile && droppedFile.name.endsWith('.docx')) {
-      setFile(droppedFile);
-      resetState();
-    } else {
-      setError('Please upload a valid .docx file.');
-    }
-  };
-
-  const handleFileChange = (e) => {
-    const selectedFile = e.target.files[0];
-    if (selectedFile && selectedFile.name.endsWith('.docx')) {
-      setFile(selectedFile);
-      resetState();
-    } else if (selectedFile) {
-      setError('Please upload a valid .docx file.');
-    }
-  };
-
-  const resetState = () => {
-    setIsSuccess(false);
-    setError('');
-    setDownloadUrl('');
-  };
-
-  const removeFile = () => {
-    setFile(null);
-    setInstructions('');
-    resetState();
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-  };
-
-  const formatDocument = async () => {
-    if (!file) return;
-
-    setIsProcessing(true);
-    setError('');
-    
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('instructions', instructions);
-
-    try {
-      const response = await axios.post('http://127.0.0.1:5000/api/format', formData, {
-        responseType: 'blob',
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
-      });
-
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      setDownloadUrl(url);
-      setIsSuccess(true);
-    } catch (err) {
-      console.error(err);
-      setError('An error occurred during processing. Ensure the backend server is running on port 5000.');
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
+/* ── Reusable inputs ─────────────────────────────────────── */
+function NumberStepper({ label, value, onChange, min = 6, max = 72 }) {
   return (
-    <div className="app-container">
-      <div className="glass-panel">
-        <div className="header">
-          <FilePenLine size={48} className="logo-icon" />
-          <h1 className="title">Smart DocFormatter</h1>
-          <p className="subtitle">AI-powered professional document standardization</p>
-        </div>
-
-        {!file && !isProcessing && !isSuccess && (
-          <div 
-            className={`upload-area ${isDragging ? 'drag-active' : ''}`}
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onDrop={handleDrop}
-            onClick={() => fileInputRef.current?.click()}
-          >
-            <UploadCloud size={48} className="upload-icon" />
-            <p className="upload-text">Click or drag your .docx file here</p>
-            <p className="upload-hint">Maximum file size: 10MB</p>
-            <input 
-              type="file" 
-              className="file-input" 
-              ref={fileInputRef} 
-              accept=".docx" 
-              onChange={handleFileChange}
-            />
-          </div>
-        )}
-
-        {error && (
-          <div style={{ color: '#ef4444', textAlign: 'center', marginBottom: '1rem', background: 'rgba(239, 68, 68, 0.1)', padding: '0.75rem', borderRadius: '8px', fontSize: '0.9rem' }}>
-            {error}
-          </div>
-        )}
-
-        {file && !isProcessing && !isSuccess && (
-          <>
-            <div className="selected-file">
-              <div className="file-info">
-                <FileText size={24} color="var(--primary)" />
-                <div>
-                  <div className="file-name">{file.name}</div>
-                  <div className="file-size">{(file.size / 1024).toFixed(1)} KB</div>
-                </div>
-              </div>
-              <button className="remove-btn" onClick={removeFile} aria-label="Remove file">
-                <X size={20} />
-              </button>
-            </div>
-            
-            <div className="instruction-input">
-              <label htmlFor="rules">Chatbot formatting rules (Optional)</label>
-              <textarea 
-                id="rules" 
-                placeholder="e.g. set font size to 14 and heading 16, make subheadings bold..."
-                value={instructions}
-                onChange={(e) => setInstructions(e.target.value)}
-                rows={3}
-              ></textarea>
-            </div>
-
-            <button className="action-btn" onClick={formatDocument}>
-              Format Document
-            </button>
-          </>
-        )}
-
-        {isProcessing && (
-          <div className="processing-state">
-            <Loader2 size={48} className="spinner" />
-            <p className="processing-text">AI is analyzing and formatting...</p>
-            <p className="subtitle" style={{fontSize: '0.85rem', textAlign: 'center'}}>
-              Parsing layout and applying your rules.
-            </p>
-          </div>
-        )}
-
-        {isSuccess && (
-          <div className="success-state">
-            <CheckCircle size={56} className="success-icon" />
-            <h2 className="success-text">Document Formatted!</h2>
-            <p className="success-hint">Your document has been professionally standardized.</p>
-            
-            <div style={{display: 'flex', gap: '1rem', marginTop: '1.5rem'}}>
-              <a 
-                href={downloadUrl} 
-                download={`formatted_${file.name}`}
-                className="action-btn" 
-                style={{textDecoration: 'none', flex: 1}}
-              >
-                <Download size={20} />
-                Download
-              </a>
-              <button 
-                className="action-btn" 
-                onClick={removeFile}
-                style={{background: 'rgba(255,255,255,0.1)', boxShadow: 'none', flex: 1}}
-              >
-                Process Another
-              </button>
-            </div>
-          </div>
-        )}
+    <div className="stepper-field">
+      <span className="stepper-label">{label}</span>
+      <div className="stepper-controls">
+        <button onClick={() => onChange(Math.max(min, value - 1))}>−</button>
+        <span className="stepper-value">{value}<small>pt</small></span>
+        <button onClick={() => onChange(Math.min(max, value + 1))}>+</button>
       </div>
     </div>
   );
 }
 
-export default App;
+function ToggleSwitch({ label, checked, onChange }) {
+  return (
+    <label className="toggle-row">
+      <span className="toggle-row-label">{label}</span>
+      <div className={`pill-toggle ${checked ? 'on' : ''}`} onClick={() => onChange(!checked)}>
+        <div className="pill-thumb" />
+      </div>
+    </label>
+  );
+}
+
+function TextInput({ label, placeholder, value, onChange }) {
+  return (
+    <div className="text-field">
+      <label>{label}</label>
+      <input
+        type="text"
+        placeholder={placeholder}
+        value={value}
+        onChange={e => onChange(e.target.value)}
+      />
+    </div>
+  );
+}
+
+/* ── Step indicator ──────────────────────────────────────── */
+function StepBar({ step }) {
+  const idx = STEPS.indexOf(step);
+  return (
+    <div className="step-bar">
+      {STEP_LABELS.map((label, i) => {
+        const Icon = STEP_ICONS[i];
+        const state = i < idx ? 'done' : i === idx ? 'active' : 'idle';
+        return (
+          <React.Fragment key={label}>
+            <div className={`step-dot ${state}`}>
+              <Icon size={13} />
+            </div>
+            {i < STEP_LABELS.length - 1 && <div className={`step-line ${i < idx ? 'done' : ''}`} />}
+          </React.Fragment>
+        );
+      })}
+    </div>
+  );
+}
+
+/* ── Typography card ─────────────────────────────────────── */
+function TypographyCard({ badge, badgeClass, typeKey, rules, updateTypography }) {
+  return (
+    <div className="type-card">
+      <div className={`type-badge ${badgeClass}`}>{badge}</div>
+      <NumberStepper
+        label="Font Size"
+        value={rules[typeKey].size}
+        onChange={v => updateTypography(typeKey, 'size', v)}
+      />
+      <ToggleSwitch
+        label="Bold"
+        checked={rules[typeKey].bold}
+        onChange={v => updateTypography(typeKey, 'bold', v)}
+      />
+    </div>
+  );
+}
+
+/* ═══════════════════ Main App ═══════════════════════════ */
+export default function App() {
+  const [file, setFile]   = useState(null);
+  const [rules, setRules] = useState(DEFAULT_RULES);
+  const [step, setStep]   = useState('upload');
+  const [isDrag, setDrag] = useState(false);
+  const [loading, setLd]  = useState(false);
+  const [dlUrl,   setDl]  = useState('');
+  const [error,   setErr] = useState('');
+  const fileRef           = useRef(null);
+
+  const updateTypography = (type, field, val) =>
+    setRules(r => ({ ...r, [type]: { ...r[type], [field]: val } }));
+  const updateMargin = (side, val) =>
+    setRules(r => ({ ...r, margins: { ...r.margins, [side]: Number(val) } }));
+  const setOrientation = o =>
+    setRules(r => ({ ...r, orientation: o }));
+  const setPageNumbers = v =>
+    setRules(r => ({ ...r, pageNumbers: v }));
+
+  const pickFile = f => {
+    if (f?.name.endsWith('.docx')) { setFile(f); setErr(''); setStep('typography'); }
+    else setErr('Please upload a .docx file.');
+  };
+
+  const handleDrop = e => {
+    e.preventDefault(); setDrag(false);
+    pickFile(e.dataTransfer.files[0]);
+  };
+
+  const handleFormat = async () => {
+    if (!file) return;
+    setLd(true); setErr('');
+    const fd = new FormData();
+    fd.append('file', file);
+    fd.append('rules', JSON.stringify(rules));
+    try {
+      const res = await axios.post('http://127.0.0.1:5000/api/format', fd, {
+        responseType: 'blob',
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      setDl(window.URL.createObjectURL(new Blob([res.data])));
+      setStep('done');
+    } catch (e) {
+      setErr('Error connecting to backend on port 5000. Ensure it is running.');
+      console.error(e);
+    } finally { setLd(false); }
+  };
+
+  const reset = () => {
+    setFile(null); setRules(DEFAULT_RULES);
+    setStep('upload'); setDl(''); setErr('');
+    if (fileRef.current) fileRef.current.value = '';
+  };
+
+  /* Render helpers */
+  const navBtn = (label, to, isPrimary = true) => (
+    <button className={`nav-btn ${isPrimary ? 'primary' : 'ghost'}`} onClick={() => setStep(to)}>
+      {label} {isPrimary && <ChevronRight size={16} />}
+    </button>
+  );
+
+  return (
+    <div className="page">
+      <div className="card">
+
+        {/* ── Brand header ── */}
+        <div className="brand">
+          <div className="brand-icon"><FilePenLine size={22} /></div>
+          <div>
+            <h1 className="brand-title">DocFormatter Pro</h1>
+            <p className="brand-sub">Professional document standardization</p>
+          </div>
+        </div>
+
+        {/* ── Step bar ── */}
+        {step !== 'done' && <StepBar step={step} />}
+
+        {/* ── Error ── */}
+        {error && <div className="alert-error">{error}</div>}
+
+        {/* ══════════ STEP: Upload ══════════ */}
+        {step === 'upload' && (
+          <div
+            className={`dropzone ${isDrag ? 'active' : ''}`}
+            onDragOver={e => { e.preventDefault(); setDrag(true); }}
+            onDragLeave={() => setDrag(false)}
+            onDrop={handleDrop}
+            onClick={() => fileRef.current?.click()}
+          >
+            <div className="dropzone-icon"><UploadCloud size={36} /></div>
+            <p className="dropzone-title">Drag & drop your .docx file</p>
+            <p className="dropzone-hint">or click to browse</p>
+            <input type="file" accept=".docx" ref={fileRef} style={{ display: 'none' }}
+              onChange={e => pickFile(e.target.files[0])} />
+          </div>
+        )}
+
+        {/* ══════════ STEP: Typography ══════════ */}
+        {step === 'typography' && (
+          <div className="step-body">
+            <div className="step-heading">
+              <Type size={18} className="step-icon" />
+              <h2>Typography</h2>
+            </div>
+            <div className="file-chip">
+              <FileText size={18} /> <span>{file?.name}</span>
+              <button className="chip-remove" onClick={reset}><X size={14} /></button>
+            </div>
+            <div className="type-grid">
+              <TypographyCard badge="H1 Heading"    badgeClass="badge-h1"  typeKey="heading"    rules={rules} updateTypography={updateTypography} />
+              <TypographyCard badge="H2 Subheading" badgeClass="badge-h2"  typeKey="subheading" rules={rules} updateTypography={updateTypography} />
+              <TypographyCard badge="Body Text"     badgeClass="badge-p"   typeKey="paragraph"  rules={rules} updateTypography={updateTypography} />
+              <TypographyCard badge="MCQ Question"  badgeClass="badge-mcq" typeKey="mcq"        rules={rules} updateTypography={updateTypography} />
+              <TypographyCard badge="MCQ Option"    badgeClass="badge-opt" typeKey="option"     rules={rules} updateTypography={updateTypography} />
+            </div>
+            <div className="nav-row">
+              {navBtn('Layout →', 'layout')}
+            </div>
+          </div>
+        )}
+
+        {/* ══════════ STEP: Layout ══════════ */}
+        {step === 'layout' && (
+          <div className="step-body">
+            <div className="step-heading">
+              <Layout size={18} className="step-icon" />
+              <h2>Page Layout</h2>
+            </div>
+
+            <div className="section-block">
+              <h3 className="section-label">Orientation</h3>
+              <div className="orientation-row">
+                {['portrait','landscape'].map(o => (
+                  <button key={o} className={`orient-card ${rules.orientation === o ? 'active' : ''}`}
+                    onClick={() => setOrientation(o)}>
+                    <div className={`orient-preview ${o}`} />
+                    <span>{o.charAt(0).toUpperCase() + o.slice(1)}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="section-block">
+              <h3 className="section-label">Page Margins <small>(cm)</small></h3>
+              <div className="margins-diagram">
+                <div className="margin-control top-control">
+                  <label>Top</label>
+                  <input type="number" min="0" max="10" step="0.1"
+                    value={rules.margins.top} onChange={e => updateMargin('top', e.target.value)} />
+                </div>
+                <div className="margin-middle-row">
+                  <div className="margin-control">
+                    <label>Left</label>
+                    <input type="number" min="0" max="10" step="0.1"
+                      value={rules.margins.left} onChange={e => updateMargin('left', e.target.value)} />
+                  </div>
+                  <div className="page-preview-box">
+                    <div className="page-preview-inner">
+                      <div className="page-line" /><div className="page-line" />
+                      <div className="page-line short" />
+                    </div>
+                  </div>
+                  <div className="margin-control">
+                    <label>Right</label>
+                    <input type="number" min="0" max="10" step="0.1"
+                      value={rules.margins.right} onChange={e => updateMargin('right', e.target.value)} />
+                  </div>
+                </div>
+                <div className="margin-control top-control">
+                  <label>Bottom</label>
+                  <input type="number" min="0" max="10" step="0.1"
+                    value={rules.margins.bottom} onChange={e => updateMargin('bottom', e.target.value)} />
+                </div>
+              </div>
+            </div>
+
+            <div className="nav-row">
+              <button className="nav-btn ghost" onClick={() => setStep('typography')}>← Back</button>
+              {navBtn('Header & Footer →', 'header-footer')}
+            </div>
+          </div>
+        )}
+
+        {/* ══════════ STEP: Header & Footer ══════════ */}
+        {step === 'header-footer' && (
+          <div className="step-body">
+            <div className="step-heading">
+              <BookOpen size={18} className="step-icon" />
+              <h2>Header, Footer & Page Numbers</h2>
+            </div>
+
+            <div className="section-block">
+              <h3 className="section-label">Header Text</h3>
+              <TextInput
+                label="Appears at the top of every page"
+                placeholder="e.g., My Document Title / Company Name"
+                value={rules.headerText}
+                onChange={v => setRules(r => ({ ...r, headerText: v }))}
+              />
+            </div>
+
+            <div className="section-block">
+              <h3 className="section-label">Footer Text</h3>
+              <TextInput
+                label="Appears at the bottom of every page"
+                placeholder="e.g., Confidential / © 2025"
+                value={rules.footerText}
+                onChange={v => setRules(r => ({ ...r, footerText: v }))}
+              />
+            </div>
+
+            <div className="section-block">
+              <h3 className="section-label"><Hash size={14} /> Page Numbers</h3>
+              <div className="page-num-row">
+                {[
+                  { value: 'none',   label: 'None' },
+                  { value: 'top',    label: 'Top (Header)' },
+                  { value: 'bottom', label: 'Bottom (Footer)' },
+                ].map(opt => (
+                  <button key={opt.value}
+                    className={`page-num-btn ${rules.pageNumbers === opt.value ? 'active' : ''}`}
+                    onClick={() => setPageNumbers(opt.value)}>
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="nav-row">
+              <button className="nav-btn ghost" onClick={() => setStep('layout')}>← Back</button>
+              {navBtn('Review →', 'review')}
+            </div>
+          </div>
+        )}
+
+        {/* ══════════ STEP: Review ══════════ */}
+        {step === 'review' && (
+          <div className="step-body">
+            <div className="step-heading">
+              <AlignLeft size={18} className="step-icon" />
+              <h2>Review & Format</h2>
+            </div>
+
+            <div className="review-grid">
+              <div className="review-card">
+                <div className="review-card-title">Typography</div>
+                {[
+                  ['Heading',    rules.heading],
+                  ['Subheading', rules.subheading],
+                  ['Body Text',  rules.paragraph],
+                  ['MCQ Q',      rules.mcq],
+                  ['MCQ Opt',    rules.option],
+                ].map(([label, r]) => (
+                  <div className="review-row" key={label}>
+                    <span className="review-key">{label}</span>
+                    <span className="review-val">{r.size}pt {r.bold ? '· Bold' : ''}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="review-card">
+                <div className="review-card-title">Layout</div>
+                <div className="review-row"><span className="review-key">Orientation</span><span className="review-val">{rules.orientation}</span></div>
+                <div className="review-row"><span className="review-key">Top</span><span className="review-val">{rules.margins.top} cm</span></div>
+                <div className="review-row"><span className="review-key">Bottom</span><span className="review-val">{rules.margins.bottom} cm</span></div>
+                <div className="review-row"><span className="review-key">Left</span><span className="review-val">{rules.margins.left} cm</span></div>
+                <div className="review-row"><span className="review-key">Right</span><span className="review-val">{rules.margins.right} cm</span></div>
+              </div>
+              <div className="review-card">
+                <div className="review-card-title">Header / Footer</div>
+                <div className="review-row"><span className="review-key">Header</span><span className="review-val">{rules.headerText || '—'}</span></div>
+                <div className="review-row"><span className="review-key">Footer</span><span className="review-val">{rules.footerText || '—'}</span></div>
+                <div className="review-row"><span className="review-key">Page #</span><span className="review-val">{rules.pageNumbers}</span></div>
+              </div>
+            </div>
+
+            <div className="nav-row">
+              <button className="nav-btn ghost" onClick={() => setStep('header-footer')}>← Back</button>
+              <button className="nav-btn primary" onClick={handleFormat} disabled={loading}>
+                {loading ? <><Loader2 size={16} className="spin" /> Formatting…</> : <>Format Document <ChevronRight size={16} /></>}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ══════════ STEP: Done ══════════ */}
+        {step === 'done' && (
+          <div className="done-state">
+            <div className="done-circle"><CheckCircle size={40} /></div>
+            <h2 className="done-title">Formatted Successfully!</h2>
+            <p className="done-hint">Your document is ready to download.</p>
+            <div className="done-actions">
+              <a href={dlUrl} download={`formatted_${file?.name}`} className="nav-btn primary" style={{ textDecoration: 'none' }}>
+                <Download size={16} /> Download
+              </a>
+              <button className="nav-btn ghost" onClick={reset}>Format Another</button>
+            </div>
+          </div>
+        )}
+
+      </div>
+    </div>
+  );
+}

@@ -1,36 +1,16 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap');
 
 :root {
-  --primary: #10b981;
-  --primary-hover: #059669;
-  --bg-color: #0f172a;
-  --card-bg: rgba(30, 41, 59, 0.7);
-  --text-main: #f8fafc;
-  --text-muted: #94a3b8;
-  --border-color: rgba(255, 255, 255, 0.1);
-  --accent: #14b8a6;
+  --bg: #080d1a;
 }
 
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
   font-family: 'Inter', sans-serif;
-  background-color: var(--bg-color);
-  color: var(--text-main);
+  background: var(--bg);
+  color: #f1f5f9;
   min-height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  overflow-x: hidden;
-  background-image: 
-    radial-gradient(circle at 15% 50%, rgba(16, 185, 129, 0.15), transparent 25%),
-    radial-gradient(circle at 85% 30%, rgba(20, 184, 166, 0.15), transparent 25%);
 }
 
-h1, h2, h3, h4, h5, h6 {
-  font-family: 'Outfit', sans-serif;
-}
+h1,h2,h3,h4 { font-family: 'Outfit', sans-serif; }
