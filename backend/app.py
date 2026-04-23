@@ -6,7 +6,8 @@ from werkzeug.utils import secure_filename
 from document_processor import process_document
 
 app = Flask(__name__)
-CORS(app)
+# Allow requests from any origin (covers Vercel frontend + local dev)
+CORS(app, origins="*")
 
 UPLOAD_FOLDER = 'uploads'
 OUTPUT_FOLDER = 'outputs'

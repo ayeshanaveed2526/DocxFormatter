@@ -140,7 +140,7 @@ export default function App() {
     fd.append('file', file);
     fd.append('rules', JSON.stringify(rules));
     try {
-      const res = await axios.post('http://127.0.0.1:5000/api/format', fd, {
+      const res = await axios.post(`${import.meta.env.VITE_API_URL}/api/format`, fd, {
         responseType: 'blob',
         headers: { 'Content-Type': 'multipart/form-data' },
       });
