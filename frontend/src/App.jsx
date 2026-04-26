@@ -8,11 +8,12 @@ import {
 import './App.css';
 
 const DEFAULT_RULES = {
-  heading:     { size: 16, bold: true },
-  subheading:  { size: 14, bold: true },
-  paragraph:   { size: 12, bold: false },
-  mcq:         { size: 12, bold: false },
-  option:      { size: 11, bold: false },
+  heading:     { size: 16, bold: true, alignment: 'left' },
+  subheading:  { size: 14, bold: true, alignment: 'left' },
+  paragraph:   { size: 12, bold: false, alignment: 'left' },
+  mcq:         { size: 12, bold: false, alignment: 'left' },
+  option:      { size: 11, bold: false, alignment: 'left' },
+  table:       { alignment: 'center', borders: true },
   margins:     { top: 2.54, bottom: 2.54, left: 2.54, right: 2.54 },
   orientation: 'portrait',
   headerText:  '',
@@ -63,6 +64,29 @@ function TextInput({ label, placeholder, value, onChange }) {
   );
 }
 
+function AlignmentPicker({ value, onChange }) {
+  const options = [
+    { id: 'left', icon: '左' },
+    { id: 'center', icon: '中' },
+    { id: 'right', icon: '右' },
+    { id: 'justify', icon: '均' }
+  ];
+  return (
+    <div className="alignment-picker">
+      {options.map(opt => (
+        <button
+          key={opt.id}
+          className={`align-opt ${value === opt.id ? 'active' : ''}`}
+          onClick={() => onChange(opt.id)}
+          title={opt.id}
+        >
+          {opt.icon}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 /* ── Step indicator ──────────────────────────────────────── */
 function StepBar({ step }) {
   const idx = STEPS.indexOf(step);
@@ -89,16 +113,53 @@ function TypographyCard({ badge, badgeClass, typeKey, rules, updateTypography })
   return (
     <div className="type-card">
       <div className={`type-badge ${badgeClass}`}>{badge}</div>
-      <NumberStepper
-        label="Font Size"
-        value={rules[typeKey].size}
-        onChange={v => updateTypography(typeKey, 'size', v)}
-      />
-      <ToggleSwitch
-        label="Bold"
-        checked={rules[typeKey].bold}
-        onChange={v => updateTypography(typeKey, 'bold', v)}
-      />
+      <div className="type-card-row">
+        <NumberStepper
+          label="Size"
+          value={rules[typeKey].size}
+          onChange={v => updateTypography(typeKey, 'size', v)}
+        />
+        <ToggleSwitch
+          label="Bold"
+          checked={rules[typeKey].bold}
+          onChange={v => updateTypography(typeKey, 'bold', v)}
+        />
+      </div>
+      <div className="type-card-footer">
+        <span className="footer-label">Alignment</span>
+        <AlignmentPicker
+          value={rules[typeKey].alignment}
+          onChange={v => updateTypography(typeKey, 'alignment', v)}
+        />
+      </div>
+    </div>
+  );
+}
+
+function TableCard({ rules, updateTable }) {
+  return (
+    <div className="section-block">
+      <h3 className="section-label">Table Settings</h3>
+      <div className="table-settings-grid">
+        <div className="table-setting-item">
+          <label>Alignment</label>
+          <div className="orientation-row small">
+            {['left', 'center', 'right'].map(a => (
+              <button key={a} className={`orient-card small ${rules.table.alignment === a ? 'active' : ''}`}
+                onClick={() => updateTable('alignment', a)}>
+                <span>{a}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="table-setting-item">
+          <ToggleSwitch
+            label="Grid Borders"
+            checked={rules.table.borders}
+            onChange={v => updateTable('borders', v)}
+          />
+        </div>
+      </div>
     </div>
   );
 }
@@ -116,6 +177,8 @@ export default function App() {
 
   const updateTypography = (type, field, val) =>
     setRules(r => ({ ...r, [type]: { ...r[type], [field]: val } }));
+  const updateTable = (field, val) =>
+    setRules(r => ({ ...r, table: { ...r.table, [field]: val } }));
   const updateMargin = (side, val) =>
     setRules(r => ({ ...r, margins: { ...r.margins, [side]: Number(val) } }));
   const setOrientation = o =>
@@ -279,6 +342,8 @@ export default function App() {
                 </div>
               </div>
             </div>
+
+            <TableCard rules={rules} updateTable={updateTable} />
 
             <div className="nav-row">
               <button className="nav-btn ghost" onClick={() => setStep('typography')}>← Back</button>

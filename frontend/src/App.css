@@ -379,9 +379,53 @@ h1,h2,h3 { font-family: 'Outfit', sans-serif; }
 .spin { animation: spinning 1s linear infinite; }
 @keyframes spinning { to { transform: rotate(360deg); } }
 
+/* ── New Layout Utilities ────────────────────────────── */
+.type-card-row {
+  display: flex; gap: .75rem; align-items: flex-end;
+}
+.type-card-row > div { flex: 1; }
+
+.type-card-footer {
+  margin-top: .4rem; padding-top: .75rem;
+  border-top: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.footer-label { font-size: .72rem; color: var(--muted); font-weight: 500; }
+
+.alignment-picker {
+  display: flex; background: var(--elevated);
+  border: 1px solid var(--border-2); border-radius: 6px;
+  overflow: hidden;
+}
+.align-opt {
+  background: transparent; border: none; color: var(--muted);
+  width: 28px; height: 26px; font-size: .65rem; cursor: pointer;
+  transition: all .2s; border-right: 1px solid var(--border-2);
+}
+.align-opt:last-child { border-right: none; }
+.align-opt:hover { background: rgba(255,255,255,.05); color: var(--text); }
+.align-opt.active { background: var(--primary); color: #000; font-weight: 700; }
+
+/* ── Table Settings ──────────────────────────────────── */
+.table-settings-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;
+}
+.table-setting-item {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: .75rem;
+}
+.table-setting-item label {
+  display: block; font-size: .7rem; color: var(--muted);
+  margin-bottom: .5rem; text-transform: uppercase; letter-spacing: .05em;
+}
+
+.orient-card.small { padding: .5rem .4rem; font-size: .75rem; }
+.orientation-row.small { gap: .4rem; }
+
 /* ── Responsive ──────────────────────────────────────── */
 @media (max-width: 480px) {
-  .type-grid    { grid-template-columns: 1fr 1fr; }
+  .type-grid    { grid-template-columns: 1fr; }
+  .table-settings-grid { grid-template-columns: 1fr; }
   .review-grid  { grid-template-columns: 1fr; }
   .done-actions { flex-direction: column; width: 100%; }
   .done-actions .nav-btn { justify-content: center; }

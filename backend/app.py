@@ -30,7 +30,6 @@ def format_document():
     if file.filename == '':
         return jsonify({'error': 'No selected file'}), 400
 
-    # Parse structured rules from form
     try:
         rules_json = request.form.get('rules', '{}')
         rules = json.loads(rules_json)
@@ -38,7 +37,9 @@ def format_document():
         rules = {}
 
     if file and file.filename.endswith('.docx'):
-        filename    = secure_filename(file.filename)
+        import time
+        ts = int(time.time())
+        filename    = f"{ts}_{secure_filename(file.filename)}"
         input_path  = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         file.save(input_path)
 
@@ -47,16 +48,35 @@ def format_document():
 
         try:
             process_document(input_path, output_path, rules)
-            return send_file(
+            
+            # Use a helper to send file and then cleanup
+            response = send_file(
                 output_path,
                 as_attachment=True,
                 download_name=output_filename,
                 mimetype='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
             )
+            
+            # Clean up input file immediately
+            if os.path.exists(input_path):
+                os.remove(input_path)
+                
+            return response
         except Exception as e:
+            if os.path.exists(input_path): os.remove(input_path)
             return jsonify({'error': str(e)}), 500
 
     return jsonify({'error': 'Invalid file format. Only .docx is supported.'}), 400
 
+@app.after_request
+def cleanup_outputs(response):
+    """
+    Optional: You could add logic here to periodically clean the OUTPUT_FOLDER 
+    if you don't delete them immediately.
+    """
+    return response
+
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    # Use environment variable for port (Render provides $PORT)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host='0.0.0.0', port=port)
