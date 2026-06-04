@@ -1,15 +1,11 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap');
 
-:root {
-  --bg: #080d1a;
-}
-
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
   font-family: 'Inter', sans-serif;
   background: var(--bg);
-  color: #f1f5f9;
+  color: var(--text);
   min-height: 100vh;
 }
 

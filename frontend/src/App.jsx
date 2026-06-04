@@ -1,18 +1,18 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
 import {
   FileText, UploadCloud, X, Loader2, CheckCircle,
   Download, FilePenLine, Type, AlignLeft, Layout,
-  BookOpen, Hash, ChevronRight
+  BookOpen, Hash, ChevronRight, Moon, Sun
 } from 'lucide-react';
 import './App.css';
 
 const DEFAULT_RULES = {
-  heading:     { size: 16, bold: true, alignment: 'left' },
-  subheading:  { size: 14, bold: true, alignment: 'left' },
-  paragraph:   { size: 12, bold: false, alignment: 'left' },
-  mcq:         { size: 12, bold: false, alignment: 'left' },
-  option:      { size: 11, bold: false, alignment: 'left' },
+  heading:     { size: 16, bold: true, alignment: 'left', font_name: 'Arial', line_spacing: 1.15, font_color: '#00d4aa' },
+  subheading:  { size: 14, bold: true, alignment: 'left', font_name: 'Arial', line_spacing: 1.15, font_color: '#0ea5e9' },
+  paragraph:   { size: 12, bold: false, alignment: 'left', font_name: 'Calibri', line_spacing: 1.15, font_color: '#1e293b' },
+  mcq:         { size: 12, bold: false, alignment: 'left', font_name: 'Calibri', line_spacing: 1.15, font_color: '#1e293b' },
+  option:      { size: 11, bold: false, alignment: 'left', font_name: 'Calibri', line_spacing: 1.15, font_color: '#334155' },
   table:       { alignment: 'center', borders: true },
   margins:     { top: 2.54, bottom: 2.54, left: 2.54, right: 2.54 },
   orientation: 'portrait',
@@ -113,6 +113,41 @@ function TypographyCard({ badge, badgeClass, typeKey, rules, updateTypography })
   return (
     <div className="type-card">
       <div className={`type-badge ${badgeClass}`}>{badge}</div>
+      
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '.5rem' }}>
+        <div className="text-field" style={{ marginBottom: 0 }}>
+          <label style={{ fontSize: '0.72rem' }}>Font Family</label>
+          <select 
+            value={rules[typeKey].font_name} 
+            onChange={e => updateTypography(typeKey, 'font_name', e.target.value)}
+            style={{ background: 'var(--elevated)', border: '1px solid var(--border-2)', borderRadius: 'var(--radius-sm)', padding: '.4rem', color: 'var(--text)', fontSize: '.8rem' }}>
+            <option>Arial</option>
+            <option>Calibri</option>
+            <option>Times New Roman</option>
+            <option>Georgia</option>
+            <option>Inter</option>
+          </select>
+        </div>
+        
+        <div style={{ display: 'flex', gap: '.5rem' }}>
+          <div className="text-field" style={{ flex: 1 }}>
+            <label style={{ fontSize: '0.72rem' }}>Color</label>
+            <input type="color" value={rules[typeKey].font_color} onChange={e => updateTypography(typeKey, 'font_color', e.target.value)} 
+                   style={{ width: '100%', height: '32px', padding: '0', border: 'none', background: 'transparent', cursor: 'pointer' }} />
+          </div>
+          <div className="text-field" style={{ flex: 1 }}>
+            <label style={{ fontSize: '0.72rem' }}>Spacing</label>
+            <select value={rules[typeKey].line_spacing} onChange={e => updateTypography(typeKey, 'line_spacing', parseFloat(e.target.value))}
+                    style={{ background: 'var(--elevated)', border: '1px solid var(--border-2)', borderRadius: 'var(--radius-sm)', padding: '.4rem', color: 'var(--text)', fontSize: '.8rem' }}>
+              <option value="1.0">1.0</option>
+              <option value="1.15">1.15</option>
+              <option value="1.5">1.5</option>
+              <option value="2.0">2.0</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
       <div className="type-card-row">
         <NumberStepper
           label="Size"
@@ -175,6 +210,12 @@ export default function App() {
   const [error,   setErr] = useState('');
   const fileRef           = useRef(null);
 
+  const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'light');
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('theme', theme);
+  }, [theme]);
+
   const updateTypography = (type, field, val) =>
     setRules(r => ({ ...r, [type]: { ...r[type], [field]: val } }));
   const updateTable = (field, val) =>
@@ -233,12 +274,18 @@ export default function App() {
       <div className="card">
 
         {/* ── Brand header ── */}
-        <div className="brand">
-          <div className="brand-icon"><FilePenLine size={22} /></div>
-          <div>
-            <h1 className="brand-title">DocFormatter Pro</h1>
-            <p className="brand-sub">Professional document standardization</p>
+        <div className="brand" style={{ justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '.875rem' }}>
+            <div className="brand-icon"><FilePenLine size={22} /></div>
+            <div>
+              <h1 className="brand-title">DocFormatter Pro</h1>
+              <p className="brand-sub">Professional document standardization</p>
+            </div>
           </div>
+          <button className="theme-toggle" onClick={() => setTheme(t => t === 'light' ? 'dark' : 'light')} 
+                  style={{ background: 'var(--elevated)', border: '1px solid var(--border-2)', color: 'var(--text)', padding: '8px', borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
+          </button>
         </div>
 
         {/* ── Step bar ── */}

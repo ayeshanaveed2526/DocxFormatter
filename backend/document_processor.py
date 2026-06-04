@@ -1,7 +1,7 @@
 import re
 import os
 import json
-import google.generativeai as genai
+from google import genai
 from docx import Document
 from docx.shared import Pt, Cm, RGBColor
 from docx.enum.text import WD_ALIGN_PARAGRAPH
@@ -22,12 +22,11 @@ URL_PATTERN           = re.compile(r'https?://\S+')
 EMAIL_PATTERN         = re.compile(r'\S+@\S+\.\S+')
 
 # --- Gemini Integration ---
-def get_gemini_model():
+def get_gemini_client():
     api_key = os.getenv("GEMINI_API_KEY")
     if not api_key:
         return None
-    genai.configure(api_key=api_key)
-    return genai.GenerativeModel('gemini-1.5-flash')
+    return genai.Client(api_key=api_key)
 
 def extract_formatting_rules(instructions):
     """
@@ -36,8 +35,8 @@ def extract_formatting_rules(instructions):
     if not instructions or not isinstance(instructions, str):
         return {}
     
-    model = get_gemini_model()
-    if not model:
+    client = get_gemini_client()
+    if not client:
         # Simple fallback parsing if no API key
         rules = {}
         if "size" in instructions.lower():
@@ -51,11 +50,11 @@ def extract_formatting_rules(instructions):
     
     Format the JSON as follows:
     {{
-        "heading": {{"size": int, "bold": bool}},
-        "subheading": {{"size": int, "bold": bool}},
-        "paragraph": {{"size": int, "bold": bool}},
-        "mcq": {{"size": int, "bold": bool}},
-        "option": {{"size": int, "bold": bool}},
+        "heading": {{"size": int, "bold": bool, "font_name": "string", "font_color": "hex without #", "line_spacing": float}},
+        "subheading": {{"size": int, "bold": bool, "font_name": "string", "font_color": "hex without #", "line_spacing": float}},
+        "paragraph": {{"size": int, "bold": bool, "font_name": "string", "font_color": "hex without #", "line_spacing": float}},
+        "mcq": {{"size": int, "bold": bool, "font_name": "string", "font_color": "hex without #", "line_spacing": float}},
+        "option": {{"size": int, "bold": bool, "font_name": "string", "font_color": "hex without #", "line_spacing": float}},
         "margins": {{"top": float, "bottom": float, "left": float, "right": float}},
         "orientation": "portrait" | "landscape",
         "headerText": "string",
@@ -65,7 +64,7 @@ def extract_formatting_rules(instructions):
     Only return the JSON.
     """
     try:
-        response = model.generate_content(prompt)
+        response = client.models.generate_content(model='gemini-1.5-flash', contents=prompt)
         # Clean response text (remove markdown backticks if present)
         text = response.text.strip()
         if text.startswith("```json"):
@@ -169,7 +168,17 @@ def apply_formatting_to_para(para, ptype, rules):
     else:
         para.alignment = WD_ALIGN_PARAGRAPH.LEFT
 
+    # --- Line Spacing ---
+    if style_rule.get("line_spacing"):
+        try:
+            para.paragraph_format.line_spacing = float(style_rule["line_spacing"])
+        except ValueError:
+            pass
+
     # --- Typography ---
+    font_name = style_rule.get("font_name")
+    font_color = style_rule.get("font_color")
+    
     for run in para.runs:
         if style_rule.get("size"):
             run.font.size = Pt(int(style_rule["size"]))
@@ -177,6 +186,19 @@ def apply_formatting_to_para(para, ptype, rules):
             run.bold = bool(style_rule["bold"])
         if style_rule.get("italic"):
             run.font.italic = True
+            
+        if font_name:
+            run.font.name = font_name
+            run._element.rPr.rFonts.set(qn('w:eastAsia'), font_name)
+            
+        if font_color:
+            try:
+                # remove '#' if present
+                hex_color = font_color.lstrip('#')
+                if len(hex_color) == 6:
+                    run.font.color.rgb = RGBColor.from_string(hex_color)
+            except Exception:
+                pass
 
 def set_page_margins(doc, top, bottom, left, right):
     for section in doc.sections:

@@ -1,8 +1,8 @@
 flask
-flask-cors
-python-docx
-google-generativeai
-python-dotenv
-werkzeug
+flaskpython-docx==1.1.2
+python-dotenv==1.0.1
+google-genai
+Flask==3.0.3
+Flask-Cors==4.0.1
+werkzeug==3.0.3
 gunicorn
-
