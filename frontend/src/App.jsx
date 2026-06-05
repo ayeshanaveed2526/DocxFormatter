@@ -251,7 +251,7 @@ export default function App() {
       setDl(window.URL.createObjectURL(new Blob([res.data])));
       setStep('done');
     } catch (e) {
-      setErr('Error connecting to backend on port 5000. Ensure it is running.');
+      setErr('Error connecting to the API. Ensure the backend is running.');
       console.error(e);
     } finally { setLd(false); }
   };
