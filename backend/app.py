@@ -17,6 +17,13 @@ os.makedirs(OUTPUT_FOLDER, exist_ok=True)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['OUTPUT_FOLDER'] = OUTPUT_FOLDER
 
+@app.route("/")
+def home():
+    return {
+        "status": "running",
+        "message": "Docx Formatter API is live"
+    }
+
 @app.route('/health')
 def health():
     return jsonify({'status': 'ok'}), 200
