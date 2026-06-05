@@ -146,10 +146,14 @@ def set_table_format(table, table_rules):
         table.alignment = WD_TABLE_ALIGNMENT.LEFT
 
     # 2. Borders (Grid)
-    if table_rules.get("borders", True):
-        table.style = 'Table Grid'
-    else:
-        table.style = 'Normal Table'
+    try:
+        if table_rules.get("borders", True):
+            table.style = 'Table Grid'
+        else:
+            table.style = 'Normal Table'
+    except KeyError:
+        # Some documents might not have these default styles
+        pass
 
 def apply_formatting_to_para(para, ptype, rules):
     if not ptype or ptype not in rules:

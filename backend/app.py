@@ -70,6 +70,8 @@ def format_document():
                 
             return response
         except Exception as e:
+            import traceback
+            traceback.print_exc()
             if os.path.exists(input_path): os.remove(input_path)
             return jsonify({'error': str(e)}), 500
 
